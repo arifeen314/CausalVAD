@@ -1,0 +1,47 @@
+# Data (too large for git)
+data/raw/
+data/features/
+data/processed/
+*.npy
+
+# Keep annotation files
+!data/annotations/*.txt
+
+# Model checkpoints
+models/checkpoints/
+*.pt
+*.pth
+
+# Outputs
+outputs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+runs/

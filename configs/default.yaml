@@ -1,0 +1,165 @@
+# ==============================================================================
+# CausalVAD — Main Configuration
+# ==============================================================================
+# All hyperparameters and paths in one place.
+# Override any value via command line or by creating a local config.
+# ==============================================================================
+
+project:
+  name: "CausalVAD"
+  version: "0.1.0"
+  description: "Causal Temporal Prompting for Explainable Video Anomaly Detection"
+
+# ---------------------------------------------------------------------------
+# Paths (relative to project root)
+# ---------------------------------------------------------------------------
+paths:
+  data_root: "data"
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  features: "data/features"
+  annotations: "data/annotations"
+  checkpoints: "models/checkpoints"
+  outputs: "outputs"
+  logs: "outputs/logs"
+  figures: "outputs/figures"
+
+# ---------------------------------------------------------------------------
+# Dataset configurations
+# ---------------------------------------------------------------------------
+datasets:
+  ucf_crime:
+    name: "UCF-Crime"
+    num_classes: 13  # 13 anomaly types + normal
+    anomaly_types:
+      - "Abuse"
+      - "Arrest"
+      - "Arson"
+      - "Assault"
+      - "Burglary"
+      - "Explosion"
+      - "Fighting"
+      - "RoadAccidents"
+      - "Robbery"
+      - "Shooting"
+      - "Shoplifting"
+      - "Stealing"
+      - "Vandalism"
+    split:
+      train_normal: 800
+      train_anomaly: 810
+      test_normal: 150
+      test_anomaly: 140
+    feature_dim: 2048  # I3D features
+
+  xd_violence:
+    name: "XD-Violence"
+    num_classes: 6
+    anomaly_types:
+      - "Fighting"
+      - "Shooting"
+      - "Riot"
+      - "Abuse"
+      - "Car Accident"
+      - "Explosion"
+    feature_dim: 2048
+
+  shanghaitech:
+    name: "ShanghaiTech"
+    num_classes: 1  # binary
+    feature_dim: 2048
+
+# ---------------------------------------------------------------------------
+# Model configuration
+# ---------------------------------------------------------------------------
+model:
+  # Vision-Language Model backbone
+  vlm:
+    name: "ViT-B-16"
+    pretrained: "openai"  # or "laion2b_s34b_b88k"
+    freeze: true
+    feature_dim: 512
+
+  # Causal Temporal Prompt module
+  causal_prompt:
+    num_prompts: 8           # number of learnable prompt tokens
+    prompt_dim: 512          # must match VLM feature dim
+    num_temporal_layers: 2   # causal transformer layers
+    num_heads: 8
+    dropout: 0.1
+    causal_mask: true        # enable causal attention mask
+    temporal_decay:
+      enabled: true
+      decay_type: "exponential"  # "exponential" | "linear" | "learned"
+      decay_rate: 0.9            # for exponential decay
+    max_sequence_length: 200     # maximum clips per video
+
+  # Anomaly classifier head
+  classifier:
+    hidden_dim: 256
+    num_layers: 2
+    dropout: 0.3
+
+  # Explanation generation head
+  explainer:
+    enabled: true
+    method: "template_fill"  # "template_fill" | "vlm_generate"
+    templates:
+      - "Normal activity observed: {description}"
+      - "Anomaly detected — {anomaly_type}: {description}"
+      - "Suspicious behavior: {description} with confidence {score:.2f}"
+
+# ---------------------------------------------------------------------------
+# Training configuration
+# ---------------------------------------------------------------------------
+training:
+  # Optimizer
+  optimizer: "adamw"
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+
+  # Scheduler
+  scheduler: "cosine"
+  warmup_epochs: 5
+  min_lr: 0.000001
+
+  # Training params
+  epochs: 50
+  batch_size: 32
+  num_workers: 4
+  clip_grad_norm: 1.0
+
+  # Loss
+  loss:
+    anomaly_weight: 1.0       # binary classification loss weight
+    temporal_smoothness: 0.1  # smoothness regularization weight
+    sparsity: 0.01            # sparsity constraint weight
+
+  # Early stopping
+  early_stopping:
+    patience: 10
+    min_delta: 0.001
+    metric: "auc"
+
+  # Reproducibility
+  seed: 42
+
+# ---------------------------------------------------------------------------
+# Evaluation configuration
+# ---------------------------------------------------------------------------
+evaluation:
+  metrics:
+    - "auc"          # Area Under ROC Curve
+    - "ap"           # Average Precision
+    - "f1"           # F1 Score (at optimal threshold)
+    - "far"          # False Alarm Rate
+  threshold: "auto"  # "auto" finds optimal from ROC curve
+
+# ---------------------------------------------------------------------------
+# Hardware
+# ---------------------------------------------------------------------------
+hardware:
+  device: "auto"     # "auto" | "cuda" | "mps" | "cpu"
+  mixed_precision: false
+  pin_memory: true

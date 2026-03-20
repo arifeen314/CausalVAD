@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data (too large for git)
+data/features/
+data/annotations/*.csv
+*.npy
+*.npz
+
+# Training outputs (large checkpoints)
+outputs/*/checkpoints/*.pt
+outputs/*/logs/
+outputs/*/figures/
+
+# Keep structure
+!data/features/.gitkeep
+!data/annotations/.gitkeep
+!outputs/.gitkeep
+
+# Misc
+*.log
+*.zip
+*.tar.gz
